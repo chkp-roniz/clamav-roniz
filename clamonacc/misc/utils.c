@@ -45,10 +45,41 @@
 #include "../clamonacc.h"
 #include "../client/client.h"
 #include "../scan/onas_queue.h"
+#include "../shared/misc.h"
 
 #if defined(HAVE_SYS_FANOTIFY_H)
 
 extern pthread_cond_t onas_scan_queue_empty_cond;
+
+static int onas_fan_checkowner_fpath(int pid, const struct optstruct *opts)
+{
+    char fpath[MAXPATHLEN + 1];
+    const struct optstruct *opt = NULL;
+    int len                     = 0;
+
+    if ((opt = optget(opts, "OnAccessExcludeProcessPath"))->enabled) {
+        snprintf(fpath, sizeof(fpath), "/proc/%d/exe", pid);
+
+        /* resolve executable path for requested pid */ 
+        len = readlink(fpath, fpath, sizeof(fpath) - 1);
+        if (len == -1) {
+            logg("*ClamMisc: internal error (failed to exclude event by process path) for pid %d ... %s\n", 
+                pid, strerror(errno));
+            return CHK_CLEAN;
+        }
+        fpath[len] = '\0';
+
+        /* lookup executable path in exclusions list */
+        while(opt) {
+            if (match_regex(fpath, opt->strarg) == 1) {
+                return CHK_FOUND;
+            }
+            opt = opt->nextarg;
+        }
+    }
+
+    return CHK_CLEAN;
+}
 
 int onas_fan_checkowner(int pid, const struct optstruct *opts)
 {
@@ -142,7 +173,7 @@ int onas_fan_checkowner(int pid, const struct optstruct *opts)
         logg("*ClamMisc: $/proc/%d vanished before UIDs could be excluded; scanning anyway\n", pid);
     }
 
-    return CHK_CLEAN;
+    return onas_fan_checkowner_fpath(pid, opts);
 }
 
 #endif
