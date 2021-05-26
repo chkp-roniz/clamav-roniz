@@ -708,6 +708,11 @@ This option allows exclusions via user names when using the on-access scanning c
 .br
 Default: disabled
 .TP
+\fBOnAccessExcludeProcessPath STRING\fR
+This option allows exclusions via process executable path when using the on-access scanning client. It can be used multiple times, and has the same potential race condition limitations of the OnAccessExcludeUID option.
+.br
+Default: disabled
+.TP
 \fBOnAccessMaxFileSize SIZE\fR
 Files larger than this value will not be scanned in on access.
 .br

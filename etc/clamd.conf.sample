@@ -748,6 +748,12 @@ Example
 # Default: disabled
 #OnAccessExcludeUname clamav
 
+# This option allows excluding processes from on-access scanning by its executable path.
+# It can be used multiple times.
+# Default: disabled
+#OnAccessExcludeProcessPath ^/bin/
+#OnAccessExcludeProcessPath ^/usr/local/bin/someapp
+
 # Number of times the OnAccess client will retry a failed scan due to
 # connection problems (or other issues).
 # Default: 0
