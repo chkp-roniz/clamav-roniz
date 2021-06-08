@@ -421,19 +421,19 @@ static cl_error_t serial_callback(STATBUF *sb, char *filename, const char *path,
 {
     int status = CL_EOPEN;
 
-    struct client_serial_data *c = (struct client_serial_data *)data->data;
+    struct client_serial_data *client_data = (struct client_serial_data *)data->data;
     int sockd, ret;
-    const char *f       = filename;
-    char *real_filename = NULL;
+    const char *filename_to_scan = filename;
+    char *real_path = NULL;
 
     UNUSEDPARAM(sb);
 
     if (reason != visit_directory_toplev) {
-        if (CL_SUCCESS != cli_realpath((const char *)path, &real_filename)) {
+        if (CL_SUCCESS != cli_realpath((const char *)path, &real_path)) {
             logg("*Failed to determine real filename of %s.\n", path);
             logg("*Quarantine of the file may fail if file path contains symlinks.\n");
         } else {
-            path = real_filename;
+            path = real_path;
         }
     }
 
@@ -441,16 +441,16 @@ static cl_error_t serial_callback(STATBUF *sb, char *filename, const char *path,
         status = CL_SUCCESS;
         goto done;
     }
-    c->files++;
+    client_data->files++;
     switch (reason) {
         case error_stat:
             logg("!Can't access file %s\n", path);
-            c->errors++;
+            client_data->errors++;
             status = CL_SUCCESS;
             goto done;
         case error_mem:
             logg("!Memory allocation failed in ftw\n");
-            c->errors++;
+            client_data->errors++;
             status = CL_EMEM;
             goto done;
         case warning_skipped_dir:
@@ -461,30 +461,30 @@ static cl_error_t serial_callback(STATBUF *sb, char *filename, const char *path,
             goto done;
         case warning_skipped_special:
             logg("^%s: Not supported file type\n", path);
-            c->errors++;
+            client_data->errors++;
             status = CL_SUCCESS;
             goto done;
         case visit_directory_toplev:
-            if (c->scantype >= STREAM) {
+            if (client_data->scantype >= STREAM) {
                 status = CL_SUCCESS;
                 goto done;
             }
-            f = path;
+            filename_to_scan = path;
         case visit_file:
             break;
     }
 
     if ((sockd = dconnect()) < 0) {
-        c->errors++;
+        client_data->errors++;
         goto done;
     }
-    ret = dsresult(sockd, c->scantype, f, &c->printok, &c->errors);
+    ret = dsresult(sockd, client_data->scantype, filename_to_scan, &client_data->printok, &client_data->errors);
     closesocket(sockd);
     if (ret < 0) {
-        c->errors++;
+        client_data->errors++;
         goto done;
     }
-    c->infected += ret;
+    client_data->infected += ret;
     if (reason == visit_directory_toplev) {
         status = CL_BREAK;
         goto done;
@@ -493,6 +493,7 @@ static cl_error_t serial_callback(STATBUF *sb, char *filename, const char *path,
     status = CL_SUCCESS;
 done:
     free(filename);
+    free(real_path);
     return status;
 }
 
