@@ -126,10 +126,7 @@ static cl_error_t onas_scan_safe(struct onas_scan_event *event_data, const char 
 #endif
 
     pthread_mutex_lock(&onas_scan_lock);
-
-    ret = onas_client_scan(event_data->tcpaddr, event_data->portnum, event_data->scantype, event_data->maxstream,
-                           fname, fd, event_data->timeout, sb, infected, err, ret_code);
-
+    ret = onas_client_scan(event_data, fname, fd, sb, infected, err, ret_code);
     pthread_mutex_unlock(&onas_scan_lock);
 
     return ret;
@@ -366,6 +363,14 @@ done:
         if (NULL != event_data->pathname) {
             free(event_data->pathname);
             event_data->pathname = NULL;
+        }
+        if (NULL != event_data->username) {
+            free(event_data->username);
+            event_data->username = NULL;
+        }
+        if (NULL != event_data->processname) {
+            free(event_data->processname);
+            event_data->processname = NULL;
         }
 
 #if defined(HAVE_SYS_FANOTIFY_H)

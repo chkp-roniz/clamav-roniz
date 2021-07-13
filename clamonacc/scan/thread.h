@@ -54,6 +54,10 @@ struct onas_scan_event {
     const char *tcpaddr;
     int64_t portnum;
     char *pathname;
+    char *username;
+    char *processname;
+    int pid;
+    int uuid;
     int fan_fd;
 #if defined(HAVE_SYS_FANOTIFY_H)
     struct fanotify_event_metadata *fmd;

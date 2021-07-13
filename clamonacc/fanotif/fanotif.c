@@ -161,6 +161,7 @@ int onas_fan_eloop(struct onas_context **ctx)
     char proc_fd_fname[1024];
     char fname[1024];
     int len, check;
+    proc_additional_info ai;
 
     FD_ZERO(&rfds);
     FD_SET((*ctx)->fan_fd, &rfds);
@@ -219,7 +220,8 @@ int onas_fan_eloop(struct onas_context **ctx)
                 }
                 fname[len] = '\0';
 
-                if ((check = onas_fan_checkowner(fmd->pid, (*ctx)->clamdopts))) {
+                ai.uname = ai.pname = NULL;
+                if ((check = onas_fan_checkowner(fmd->pid, (*ctx)->clamdopts, &ai))) {
                     scan = 0;
                     if (check != CHK_SELF) {
                         logg("*ClamFanotif: %s skipped (excluded UID)\n", fname);
@@ -248,6 +250,10 @@ int onas_fan_eloop(struct onas_context **ctx)
                     }
                     memcpy(event_data->fmd, fmd, sizeof(struct fanotify_event_metadata));
                     event_data->pathname = cli_strdup(fname);
+                    event_data->uuid = ai.uuid;
+                    event_data->username = ai.uname; //Will be released by event_data thread
+                    event_data->processname = ai.pname; //Will be released by event_data thread
+                    event_data->pid         = fmd->pid;
 
                     logg("*ClamFanotif: attempting to feed consumer queue\n");
                     /* feed consumer queue */

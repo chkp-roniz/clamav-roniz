@@ -532,25 +532,32 @@ int onas_get_clamd_version(struct onas_context **ctx)
 /**
  * @brief kick off scanning and return results
  *
- * @param tcpaddr   string string which refers to either the TCPaddress or the local socket to connect to
- * @param portnum   the port to use in case of TCP connection, set to 0 if connecting to a local socket
- * @param scantype  the type of scan to perform, e.g. fdpass, stream
- * @param maxstream the max streamsize (in bytes) allowed across the socket per file
- * @param fname     the name of the file to be scanned
- * @param fd        the file descriptor for the file to be scanned, often (but not always) this is held by fanotify
- * @param timeout   time in ms to allow curl before timing out connection attempts
- * @param sb        variable to store and pass all of our stat info on the file so we don't have to access it multiple times (triggering multiple events)
- * @param infected  return variable indincating whether daemon returned with an infected verdict or not
- * @param err       return variable passed to the daemon protocol interface indicating how many things went wrong in the course of scanning
- * @param ret_code  return variable passed to the daemon protocol interface indicating last known issue or success
+ * @param event_data  onas_scan_event*, containing:
+ *                    - tcpaddr:   string string which refers to either the TCPaddress or the local socket to connect to
+ *                    - portnum:   the port to use in case of TCP connection, set to 0 if connecting to a local socket
+ *                    - scantype:  the type of scan to perform, e.g. fdpass, stream
+ *                    - maxstream: the max streamsize (in bytes) allowed across the socket per file
+ *                    - timeout:   time in ms to allow curl before timing out connection attempts
+ * @param fname       the name of the file to be scanned
+ * @param fd          the file descriptor for the file to be scanned, often (but not always) this is held by fanotify
+ * @param sb          variable to store and pass all of our stat info on the file so we don't have to access it multiple times (triggering multiple events)
+ * @param infected    return variable indincating whether daemon returned with an infected verdict or not
+ * @param err         return variable passed to the daemon protocol interface indicating how many things went wrong in the course of scanning
+ * @param ret_code    return variable passed to the daemon protocol interface indicating last known issue or success
  */
-int onas_client_scan(const char *tcpaddr, int64_t portnum, int32_t scantype, uint64_t maxstream, const char *fname, int fd, int64_t timeout, STATBUF sb, int *infected, int *err, cl_error_t *ret_code)
+int onas_client_scan(const struct onas_scan_event *event_data, const char *fname, int fd, STATBUF sb, int *infected, int *err, cl_error_t *ret_code)
 {
     CURL *curl        = NULL;
     CURLcode curlcode = CURLE_OK;
     int errors        = 0;
     int ret;
     static bool disconnected = false;
+
+    const char *tcpaddr = event_data->tcpaddr;
+    int64_t portnum = event_data->portnum;
+    int32_t scantype = event_data-> scantype;
+    uint64_t maxstream = event_data->maxstream;
+    int64_t timeout = event_data->timeout;
 
     *infected = 0;
 
@@ -578,7 +585,7 @@ int onas_client_scan(const char *tcpaddr, int64_t portnum, int32_t scantype, uin
         disconnected = false;
     }
 
-    if ((ret = onas_dsresult(curl, scantype, maxstream, fname, fd, timeout, &ret, err, ret_code)) >= 0) {
+    if ((ret = onas_dsresult(curl, event_data, fname, fd, &ret, err, ret_code)) >= 0) {
         *infected = ret;
     } else {
         logg("*ClamClient: connection could not be established ... return code %d\n", *ret_code);
