@@ -56,7 +56,7 @@ struct onas_scan_event {
     char *pathname;
     char *username;
     char *processname;
-    int ppid;
+    int pid;
     int uuid;
     int fan_fd;
 #if defined(HAVE_SYS_FANOTIFY_H)

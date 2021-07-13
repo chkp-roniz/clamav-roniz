@@ -253,7 +253,7 @@ int onas_fan_eloop(struct onas_context **ctx)
                     event_data->uuid = ai.uuid;
                     event_data->username = ai.uname; //Will be released by event_data thread
                     event_data->processname = ai.pname; //Will be released by event_data thread
-                    event_data->ppid = fmd->pid;
+                    event_data->pid         = fmd->pid;
 
                     logg("*ClamFanotif: attempting to feed consumer queue\n");
                     /* feed consumer queue */

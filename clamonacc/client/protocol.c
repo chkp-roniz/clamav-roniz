@@ -373,7 +373,7 @@ int onas_dsresult(CURL *curl, const struct onas_scan_event *event_data, const ch
                         logg("{\"detection_info\":{\"fname\":\"%s\",\"sig\":\"%s\",\"pid\":\"%d\",\"pname\":\"%s\",\"uid\":\"%d\",\"uname\":\"%s\"}}\n",
                              filename,
                              strncmp(colon, ": ", 2) == 0 ? colon+2 : colon,  // skip ": " from signature name
-                             event_data->ppid,
+                             event_data->pid,
                              event_data->processname,
                              event_data->uuid,
                              event_data->username);
