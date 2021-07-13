@@ -51,7 +51,7 @@
 
 extern pthread_cond_t onas_scan_queue_empty_cond;
 
-static int onas_fan_checkowner_fpath(int pid, const struct optstruct *opts)
+static int onas_fan_checkowner_fpath(int pid, const struct optstruct *opts, proc_additional_info *ai)
 {
     char fpath[MAXPATHLEN + 1];
     const struct optstruct *opt = NULL;
@@ -68,6 +68,7 @@ static int onas_fan_checkowner_fpath(int pid, const struct optstruct *opts)
             return CHK_CLEAN;
         }
         fpath[len] = '\0';
+        ai->pname = cli_strdup(fpath);
 
         /* lookup executable path in exclusions list */
         while(opt) {
@@ -81,7 +82,7 @@ static int onas_fan_checkowner_fpath(int pid, const struct optstruct *opts)
     return CHK_CLEAN;
 }
 
-int onas_fan_checkowner(int pid, const struct optstruct *opts)
+int onas_fan_checkowner(int pid, const struct optstruct *opts, proc_additional_info *ai)
 {
     struct passwd *pwd;
     char path[32];
@@ -108,6 +109,7 @@ int onas_fan_checkowner(int pid, const struct optstruct *opts)
     /* perform exclusion checks if we can stat OK */
     snprintf(path, sizeof(path), "/proc/%u", pid);
     if (CLAMSTAT(path, &sb) == 0) {
+        ai->uuid = sb.st_uid;
         /* check all our non-root UIDs first */
         if (opt->enabled) {
             while (opt) {
@@ -154,6 +156,7 @@ int onas_fan_checkowner(int pid, const struct optstruct *opts)
                         }
                     }
                 } else {
+                    ai->uname = cli_strdup(pwd->pw_name);
                     if (!strncmp(opt_uname->strarg, pwd->pw_name, strlen(opt_uname->strarg))) {
                         return CHK_FOUND;
                     }
@@ -173,7 +176,7 @@ int onas_fan_checkowner(int pid, const struct optstruct *opts)
         logg("*ClamMisc: $/proc/%d vanished before UIDs could be excluded; scanning anyway\n", pid);
     }
 
-    return onas_fan_checkowner_fpath(pid, opts);
+    return onas_fan_checkowner_fpath(pid, opts, ai);
 }
 
 #endif

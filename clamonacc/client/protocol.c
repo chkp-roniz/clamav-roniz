@@ -230,7 +230,7 @@ fd_out:
  * This is used only in non IDSESSION mode
  * Returns the number of infected files or -1 on error
  * NOTE: filename may be NULL for STREAM scantype. */
-int onas_dsresult(CURL *curl, int scantype, uint64_t maxstream, const char *filename, int fd, int64_t timeout, int *printok, int *errors, cl_error_t *ret_code)
+int onas_dsresult(CURL *curl, const struct onas_scan_event *event_data, const char *filename, int fd, int *printok, int *errors, cl_error_t *ret_code)
 {
     int infected = 0, len = 0, beenthere = 0;
     char *bol, *eol;
@@ -238,6 +238,10 @@ int onas_dsresult(CURL *curl, int scantype, uint64_t maxstream, const char *file
     STATBUF sb;
     int sockd                                                        = -1;
     int (*recv_func)(struct onas_rcvln *, char **, char **, int64_t) = NULL;
+
+    int scantype = event_data->scantype;
+    uint64_t maxstream = event_data->maxstream;
+    int64_t timeout = event_data->timeout;
 
     sockd = onas_get_sockd();
 
@@ -366,6 +370,13 @@ int onas_dsresult(CURL *curl, int scantype, uint64_t maxstream, const char *file
                 if (filename) {
                     if (scantype >= STREAM) {
                         logg("~%s%s FOUND\n", filename, colon);
+                        logg("{\"detection_info\":{\"fname\":\"%s\",\"sig\":\"%s\",\"pid\":\"%d\",\"pname\":\"%s\",\"uid\":\"%d\",\"uname\":\"%s\"}}\n",
+                             filename,
+                             strncmp(colon, ": ", 2) == 0 ? colon+2 : colon,  // skip ": " from signature name
+                             event_data->ppid,
+                             event_data->processname,
+                             event_data->uuid,
+                             event_data->username);
                         if (action) {
                             action(filename);
                         }

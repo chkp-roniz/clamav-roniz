@@ -35,8 +35,14 @@ typedef enum {
     CHK_SELF
 } cli_check_t;
 
+typedef struct proc_additional_info {
+    int uuid;
+    char *uname;
+    char *pname;
+} proc_additional_info;
+
 #if defined(HAVE_SYS_FANOTIFY_H)
-int onas_fan_checkowner(int pid, const struct optstruct *opts);
+int onas_fan_checkowner(int pid, const struct optstruct *opts, proc_additional_info *ai);
 #endif
 char **onas_get_opt_list(const char *fname, int *num_entries, cl_error_t *err);
 void free_opt_list(char **opt_list, int entries);
