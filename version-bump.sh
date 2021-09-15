@@ -1,6 +1,6 @@
 # RUN ONLY ON dev/0.103.2xx
 # ========================
-BRANCH_NAME=$(git branch | awk '$1 ~/^*/' | cut -c 3-)
+BRANCH_NAME=$(git branch | awk '$1 ~/^\*/' | cut -c 3-)
 if [[ $BRANCH_NAME == "dev/0.103.2xx" ]]; then
     CURR_VER=$(git describe --tags --abbrev=0 --match="v[0-9]*" | cut -c 2-)
     NEW_VER=$(echo "$CURR_VER" | awk -F. -v OFS=. 'NF==1{print ++$NF}; NF>1{if(length($NF+1)>length($NF))$(NF-1)++; $NF=sprintf("%0*d", length($NF), ($NF+1)%(10^length($NF))); print}')
