@@ -7,7 +7,7 @@ properties(
                        defaultValue: "${env.BRANCH_NAME}",
                        description: 'clamav-devel branch'),
                 string(name: 'VERSION',
-                       defaultValue: '0.103.210',
+                       defaultValue: '0.103.211',
                        description: 'ClamAV version string'),
                 string(name: 'BUILD_BRANCH',
                        defaultValue: 'build-0.103',
