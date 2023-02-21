@@ -631,7 +631,7 @@ static cl_error_t hfsplus_check_attribute(cli_ctx *ctx, hfsPlusVolumeHeader *vol
 /* Fetch a node's contents into the buffer */
 static int hfsplus_fetch_node(cli_ctx *ctx, hfsPlusVolumeHeader *volHeader, hfsHeaderRecord *catHeader,
                               hfsHeaderRecord *extHeader, hfsPlusForkData *catFork, uint32_t node, uint8_t *buff, 
-                              size_t *buffSize)
+                              size_t buffSize)
 {
     int foundBlock = 0;
     uint64_t catalogOffset;
